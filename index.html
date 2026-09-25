@@ -2,106 +2,309 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>共乘車資計算器 (夏普利值模型)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>夏普利值公平共乘計算器</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .card { background: #fff; width: 100%; max-width: 420px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; }
-    h2 { margin-top: 0; text-align: center; color: #1a1a1a; font-size: 1.25rem; }
-    .form-group { margin-bottom: 14px; }
-    label { display: block; font-size: 0.9rem; color: #444; margin-bottom: 5px; font-weight: 500; }
-    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
-    .hint { font-size: 0.8rem; color: #888; margin-top: 4px; }
-    button { width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
-    button:active { background: #005ecb; }
-    .btn-copy { background: #34c759; margin-top: 8px; }
-    .result-box { margin-top: 20px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 14px; white-space: pre-wrap; font-size: 0.9rem; color: #212529; line-height: 1.5; }
+    :root {
+      --primary: #007aff;
+      --bg: #f2f2f7;
+      --card-bg: #ffffff;
+      --border: #e5e5ea;
+      --text: #1c1c1e;
+      --subtext: #8e8e93;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      box-sizing: border-box;
+    }
+    h2 {
+      font-size: 1.3rem;
+      margin: 0 0 16px 0;
+      text-align: center;
+      font-weight: 700;
+    }
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--subtext);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: var(--text);
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fafafa;
+      box-sizing: border-box;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+    .passenger-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .passenger-row input[type="text"] {
+      flex: 1.2;
+    }
+    .passenger-row input[type="number"] {
+      flex: 1.5;
+    }
+    .btn-del {
+      background: #ff3b30;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-add {
+      width: 100%;
+      padding: 10px;
+      background: #e5f1ff;
+      color: var(--primary);
+      border: 1px dashed var(--primary);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .action-btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+    }
+    .btn-copy {
+      background: #34c759;
+      margin-top: 8px;
+    }
+    .result-box {
+      margin-top: 16px;
+      background: #f8f9fa;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.88rem;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>共乘車資計算器 (夏普利值)</h2>
-  
-  <div class="form-group">
-    <label>總車資 (元):</label>
-    <input type="number" id="cost" value="2000">
-  </div>
-  
-  <div class="form-group">
-    <label>總里程 (km):</label>
-    <input type="number" id="dist" value="50">
-  </div>
+<div class="container">
+  <h2>共乘車資分攤 (夏普利值)</h2>
 
-  <div class="form-group">
-    <label>乘客 A 下車里程 (km):</label>
-    <input type="number" id="distA" value="15">
+  <div class="section-title">基礎行程</div>
+  <div class="grid-2">
+    <div>
+      <label>總車資 (元)</label>
+      <input type="number" id="totalCost" value="2000">
+    </div>
+    <div>
+      <label>總里程 (km)</label>
+      <input type="number" id="totalDist" value="50" oninput="syncLastPassengerDist()">
+    </div>
   </div>
 
-  <div class="form-group">
-    <label>乘客 B 下車里程 (km):</label>
-    <input type="number" id="distB" value="30">
-    <div class="hint">乘客 C（你）：同總里程 50 km</div>
+  <div class="section-title">乘客下車名單 (起點算起里程)</div>
+  <div id="passengerList">
+    <!-- 預設 3 人名單 -->
+    <div class="passenger-row">
+      <input type="text" class="p-name" value="乘客 A">
+      <input type="number" class="p-dist" value="15" placeholder="下車里程 km">
+      <button class="btn-del" onclick="removeRow(this)">✕</button>
+    </div>
+    <div class="passenger-row">
+      <input type="text" class="p-name" value="乘客 B">
+      <input type="number" class="p-dist" value="30" placeholder="下車里程 km">
+      <button class="btn-del" onclick="removeRow(this)">✕</button>
+    </div>
+    <div class="passenger-row">
+      <input type="text" class="p-name" value="我 (最遠)">
+      <input type="number" class="p-dist" value="50" disabled style="background:#eaeaea; color:#666;">
+      <button class="btn-del" style="visibility:hidden;">✕</button>
+    </div>
   </div>
 
-  <button onclick="calculate()">計算夏普利分攤車資</button>
-  <button class="btn-copy" onclick="copyResult()">複製計算結果</button>
+  <button class="btn-add" onclick="addRow()">＋ 新增途中下車乘客</button>
 
-  <div class="result-box" id="result">點擊上方按鈕計算結果...</div>
+  <button class="action-btn" onclick="calculateShapley()">計算公平車資</button>
+  <button class="action-btn btn-copy" onclick="copyResult()">一鍵複製結果傳 LINE</button>
+
+  <div class="result-box" id="resultBox">點擊「計算公平車資」查看每人應付金額...</div>
 </div>
 
 <script>
-function calculate() {
-  const cost = parseFloat(document.getElementById('cost').value);
-  const dist = parseFloat(document.getElementById('dist').value);
-  const distA = parseFloat(document.getElementById('distA').value);
-  const distB = parseFloat(document.getElementById('distB').value);
-  const out = document.getElementById('result');
-
-  if (isNaN(cost) || isNaN(dist) || isNaN(distA) || isNaN(distB)) {
-    out.innerText = "【錯誤】請完整輸入所有數值！";
-    return;
+// 總里程變更時，自動更新最後一位乘客里程
+function syncLastPassengerDist() {
+  const total = document.getElementById('totalDist').value;
+  const rows = document.querySelectorAll('.passenger-row');
+  if (rows.length > 0) {
+    const lastDistInput = rows[rows.length - 1].querySelector('.p-dist');
+    lastDistInput.value = total;
   }
-  if (cost <= 0 || dist <= 0 || distA <= 0 || distB <= 0) {
-    out.innerText = "【錯誤】所有數值必須大於 0！";
-    return;
-  }
-  if (!(distA < distB && distB < dist)) {
-    out.innerText = `【順序錯誤】里程必須符合：\n乘客 A (${distA}km) < 乘客 B (${distB}km) < 總里程 (${dist}km)`;
-    return;
-  }
-
-  const rate = cost / dist;
-  const seg1 = distA;
-  const seg2 = distB - distA;
-  const seg3 = dist - distB;
-
-  const costA_raw = (seg1 * rate) / 3;
-  const costB_raw = costA_raw + (seg2 * rate) / 2;
-  const costC_raw = costB_raw + (seg3 * rate);
-
-  const finalA = Math.round(costA_raw);
-  const finalB = Math.round(costB_raw);
-  const finalC = Math.round(cost) - finalA - finalB;
-
-  out.innerText = 
-    `【夏普利值公平車資分攤結果】\n` +
-    `------------------------------------\n` +
-    `• 總里程: ${dist} km | 總車資: ${cost} 元\n` +
-    `• 平均費率: ${rate.toFixed(2)} 元/km\n\n` +
-    `👤 乘客 A (下車點 ${distA} km): ${finalA} 元\n` +
-    `👤 乘客 B (下車點 ${distB} km): ${finalB} 元\n` +
-    `👤 乘客 C (最遠/你 ${dist} km): ${finalC} 元\n` +
-    `------------------------------------\n` +
-    `✔ 驗證總和: ${finalA + finalB + finalC} 元 (已平衡差額)`;
 }
 
+// 新增乘客
+function addRow() {
+  const container = document.getElementById('passengerList');
+  const count = container.children.length;
+  const row = document.createElement('div');
+  row.className = 'passenger-row';
+  row.innerHTML = `
+    <input type="text" class="p-name" value="乘客 ${String.fromCharCode(65 + count - 1)}">
+    <input type="number" class="p-dist" placeholder="下車里程 km">
+    <button class="btn-del" onclick="removeRow(this)">✕</button>
+  `;
+  // 插在最後一位（自己）之前
+  container.insertBefore(row, container.lastElementChild);
+}
+
+// 刪除乘客
+function removeRow(btn) {
+  const container = document.getElementById('passengerList');
+  if (container.children.length <= 2) {
+    alert("至少需要保留 2 位乘客！");
+    return;
+  }
+  btn.parentElement.remove();
+}
+
+// 計算核心
+function calculateShapley() {
+  const totalCost = parseFloat(document.getElementById('totalCost').value);
+  const totalDist = parseFloat(document.getElementById('totalDist').value);
+  const out = document.getElementById('resultBox');
+
+  if (isNaN(totalCost) || isNaN(totalDist) || totalCost <= 0 || totalDist <= 0) {
+    out.innerText = "【錯誤】請填寫正確的總車資與總里程！";
+    return;
+  }
+
+  // 收集所有乘客資料
+  const rows = document.querySelectorAll('.passenger-row');
+  let list = [];
+  for (let i = 0; i < rows.length; i++) {
+    const name = rows[i].querySelector('.p-name').value.trim() || `乘客 ${i + 1}`;
+    const dist = parseFloat(rows[i].querySelector('.p-dist').value);
+
+    if (isNaN(dist) || dist <= 0) {
+      out.innerText = `【錯誤】請完整填寫「${name}」的有效下車里程！`;
+      return;
+    }
+    if (dist > totalDist) {
+      out.innerText = `【錯誤】「${name}」的里程 (${dist}km) 不能大於總里程 (${totalDist}km)！`;
+      return;
+    }
+    list.push({ name, dist, cost: 0 });
+  }
+
+  // 依照下車距離由近到遠「自動排序」
+  list.sort((a, b) => a.dist - b.dist);
+
+  // 夏普利值演算法（共乘階梯模型）
+  const N = list.length;
+  const rate = totalCost / totalDist;
+  let prevDist = 0;
+
+  for (let i = 0; i < N; i++) {
+    const segDist = list[i].dist - prevDist;
+    const peopleOnBoard = N - i; // 當時車上的人數
+    const segCostPerPerson = (segDist * rate) / peopleOnBoard;
+
+    // 此段費用累加給當下仍在車上的所有人
+    for (let j = i; j < N; j++) {
+      list[j].cost += segCostPerPerson;
+    }
+    prevDist = list[i].dist;
+  }
+
+  // 取整與差額自動平衡（微調最後一位，確保總和等於總車資）
+  let sum = 0;
+  for (let i = 0; i < N; i++) {
+    list[i].pay = Math.round(list[i].cost);
+    if (i < N - 1) sum += list[i].pay;
+  }
+  list[N - 1].pay = Math.round(totalCost) - sum;
+
+  // 格式化輸出
+  let txt = `【夏普利模型公平共乘車資】\n`;
+  txt += `────────────────────\n`;
+  txt += `• 總車資: ${totalCost} 元 | 總里程: ${totalDist} km\n`;
+  txt += `• 共乘人數: ${N} 人 | 均價: ${rate.toFixed(1)} 元/km\n\n`;
+  txt += `【各人應付明細】\n`;
+
+  list.forEach((p, idx) => {
+    txt += `${idx + 1}. ${p.name} (${p.dist} km) ➔ 應付: ${p.pay} 元\n`;
+  });
+
+  txt += `────────────────────\n`;
+  txt += `✔ 總計: ${list.reduce((acc, cur) => acc + cur.pay, 0)} 元 (已平衡差額)`;
+
+  out.innerText = txt;
+}
+
+// 複製結果
 function copyResult() {
-  const text = document.getElementById('result').innerText;
+  const text = document.getElementById('resultBox').innerText;
+  if (!text || text.includes("點擊「計算公平車資」")) {
+    alert("請先計算出結果後再複製！");
+    return;
+  }
   navigator.clipboard.writeText(text).then(() => {
-    alert("已成功複製分攤結果！");
+    alert("已成功複製車資明細至剪貼簿！");
   }).catch(() => {
-    alert("複製失敗，請手動反白複製。");
+    alert("複製失敗，請手動長按反白文字複製。");
   });
 }
 </script>
