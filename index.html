@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>共乘車資計算器 (夏普利值模型)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f6f8; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .card { background: #fff; width: 100%; max-width: 420px; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); box-sizing: border-box; }
+    h2 { margin-top: 0; text-align: center; color: #1a1a1a; font-size: 1.25rem; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 0.9rem; color: #444; margin-bottom: 5px; font-weight: 500; }
+    input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+    .hint { font-size: 0.8rem; color: #888; margin-top: 4px; }
+    button { width: 100%; padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:active { background: #005ecb; }
+    .btn-copy { background: #34c759; margin-top: 8px; }
+    .result-box { margin-top: 20px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 14px; white-space: pre-wrap; font-size: 0.9rem; color: #212529; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>共乘車資計算器 (夏普利值)</h2>
+  
+  <div class="form-group">
+    <label>總車資 (元):</label>
+    <input type="number" id="cost" value="2000">
+  </div>
+  
+  <div class="form-group">
+    <label>總里程 (km):</label>
+    <input type="number" id="dist" value="50">
+  </div>
+
+  <div class="form-group">
+    <label>乘客 A 下車里程 (km):</label>
+    <input type="number" id="distA" value="15">
+  </div>
+
+  <div class="form-group">
+    <label>乘客 B 下車里程 (km):</label>
+    <input type="number" id="distB" value="30">
+    <div class="hint">乘客 C（你）：同總里程 50 km</div>
+  </div>
+
+  <button onclick="calculate()">計算夏普利分攤車資</button>
+  <button class="btn-copy" onclick="copyResult()">複製計算結果</button>
+
+  <div class="result-box" id="result">點擊上方按鈕計算結果...</div>
+</div>
+
+<script>
+function calculate() {
+  const cost = parseFloat(document.getElementById('cost').value);
+  const dist = parseFloat(document.getElementById('dist').value);
+  const distA = parseFloat(document.getElementById('distA').value);
+  const distB = parseFloat(document.getElementById('distB').value);
+  const out = document.getElementById('result');
+
+  if (isNaN(cost) || isNaN(dist) || isNaN(distA) || isNaN(distB)) {
+    out.innerText = "【錯誤】請完整輸入所有數值！";
+    return;
+  }
+  if (cost <= 0 || dist <= 0 || distA <= 0 || distB <= 0) {
+    out.innerText = "【錯誤】所有數值必須大於 0！";
+    return;
+  }
+  if (!(distA < distB && distB < dist)) {
+    out.innerText = `【順序錯誤】里程必須符合：\n乘客 A (${distA}km) < 乘客 B (${distB}km) < 總里程 (${dist}km)`;
+    return;
+  }
+
+  const rate = cost / dist;
+  const seg1 = distA;
+  const seg2 = distB - distA;
+  const seg3 = dist - distB;
+
+  const costA_raw = (seg1 * rate) / 3;
+  const costB_raw = costA_raw + (seg2 * rate) / 2;
+  const costC_raw = costB_raw + (seg3 * rate);
+
+  const finalA = Math.round(costA_raw);
+  const finalB = Math.round(costB_raw);
+  const finalC = Math.round(cost) - finalA - finalB;
+
+  out.innerText = 
+    `【夏普利值公平車資分攤結果】\n` +
+    `------------------------------------\n` +
+    `• 總里程: ${dist} km | 總車資: ${cost} 元\n` +
+    `• 平均費率: ${rate.toFixed(2)} 元/km\n\n` +
+    `👤 乘客 A (下車點 ${distA} km): ${finalA} 元\n` +
+    `👤 乘客 B (下車點 ${distB} km): ${finalB} 元\n` +
+    `👤 乘客 C (最遠/你 ${dist} km): ${finalC} 元\n` +
+    `------------------------------------\n` +
+    `✔ 驗證總和: ${finalA + finalB + finalC} 元 (已平衡差額)`;
+}
+
+function copyResult() {
+  const text = document.getElementById('result').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    alert("已成功複製分攤結果！");
+  }).catch(() => {
+    alert("複製失敗，請手動反白複製。");
+  });
+}
+</script>
+
+</body>
+</html>
